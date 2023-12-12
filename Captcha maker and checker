@@ -1,0 +1,41 @@
+# CAPTCHA MAKER AND CHECKER
+from captcha.image import ImageCaptcha
+import random
+import string
+from PIL import Image
+from IPython.display import display
+ 
+
+cont = True
+count = 1
+num = int(input('ENTER NO. OF DIGITS FOR CAPTCHA'))
+while cont==True:
+    
+    image = ImageCaptcha(width = 280, height = 150)
+    captcha_text = ''.join(random.choice(string.ascii_letters + string.digits) for x in range(num))
+    print(captcha_text)
+    data = image.generate(captcha_text)
+    count+=1
+    image.write(captcha_text, 'CAPTCHA{}.png'.format(count))
+    check = input('Do you want to check the captcha? ( Yes or No)')
+    if check=='Yes':
+        path='CAPTCHA{}.png'.format(count)
+        display(Image.open(path))
+        ans = input('ENTER CAPTCHA HERE : ')
+        if ans==captcha_text:
+            print('CAPTCHA ENTERED CORRECTLY')
+        else:
+            print('INCORRECT CAPTCHA')
+    elif check=='No':
+        print('no captcha check')
+    else:
+        print('please enter a valid answer')
+    
+    cont = input('do you want to continue? (True or False)')
+    if cont=='False':
+        break
+    elif cont=='True':
+        cont = True
+        print('Generating next captcha')
+    else:
+        print('Please enter a valid choice')
