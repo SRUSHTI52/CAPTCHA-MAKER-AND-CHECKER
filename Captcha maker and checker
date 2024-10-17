@@ -1,41 +1,69 @@
-# CAPTCHA MAKER AND CHECKER
+from flask import Flask, render_template, request, send_file, redirect, url_for
 from captcha.image import ImageCaptcha
+from gtts import gTTS
 import random
 import string
-from PIL import Image
-from IPython.display import display
- 
+import time
+import os
 
-cont = True
-count = 1
-num = int(input('ENTER NO. OF DIGITS FOR CAPTCHA'))
-while cont==True:
-    
-    image = ImageCaptcha(width = 280, height = 150)
-    captcha_text = ''.join(random.choice(string.ascii_letters + string.digits) for x in range(num))
-    print(captcha_text)
-    data = image.generate(captcha_text)
-    count+=1
-    image.write(captcha_text, 'CAPTCHA{}.png'.format(count))
-    check = input('Do you want to check the captcha? ( Yes or No)')
-    if check=='Yes':
-        path='CAPTCHA{}.png'.format(count)
-        display(Image.open(path))
-        ans = input('ENTER CAPTCHA HERE : ')
-        if ans==captcha_text:
-            print('CAPTCHA ENTERED CORRECTLY')
+app = Flask(__name__)
+
+# Global variable to store CAPTCHA details
+captcha_text = ""
+start_time = 0
+time_limit = 30
+
+
+def generate_captcha_text(num):
+    return ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(num))
+
+
+def generate_image_captcha(captcha_text):
+    image = ImageCaptcha(width=280, height=150)
+    image_path = 'static/captcha_image.png'  # Updated path
+    image.write(captcha_text, image_path)
+    return image_path
+
+
+def generate_audio_captcha(captcha_text):
+    tts = gTTS(text=captcha_text, lang='en')
+    audio_path = 'static/audio_captcha.mp3'  # Updated path
+    tts.save(audio_path)
+    return audio_path
+
+
+@app.route('/', methods=['GET', 'POST'])
+def index():
+    global captcha_text, start_time
+
+    if request.method == 'POST':
+        ans = request.form.get('captcha')
+        elapsed_time = time.time() - start_time
+
+        if elapsed_time > time_limit:
+            return render_template('index.html', message="Time expired! Please try again.", captcha_image=None,
+                                   audio_file=None)
+        elif ans == captcha_text:
+            return render_template('index.html', message="CAPTCHA ENTERED CORRECTLY!", captcha_image=None,
+                                   audio_file=None)
         else:
-            print('INCORRECT CAPTCHA')
-    elif check=='No':
-        print('no captcha check')
-    else:
-        print('please enter a valid answer')
-    
-    cont = input('do you want to continue? (True or False)')
-    if cont=='False':
-        break
-    elif cont=='True':
-        cont = True
-        print('Generating next captcha')
-    else:
-        print('Please enter a valid choice')
+            return render_template('index.html', message="INCORRECT CAPTCHA! Please try again.", captcha_image=None,
+                                   audio_file=None)
+
+    num = 6  # Default CAPTCHA length
+    captcha_text = generate_captcha_text(num)
+    generate_image_captcha(captcha_text)
+    generate_audio_captcha(captcha_text)
+    start_time = time.time()
+
+    return render_template('index.html', captcha_image='static/captcha_image.png',
+                           audio_file='static/audio_captcha.mp3')
+
+
+@app.route('/audio')
+def audio():
+    return send_file('static/audio_captcha.mp3')
+
+
+if __name__ == '__main__':
+    app.run(debug=True)
