@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secure Verification</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
+
+        :root {
+            --primary-color: #3498db;
+            --secondary-color: #2ecc71;
+            --background-color: #f9f9f9;
+            --text-color: #333;
+            --error-color: #e74c3c;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-image:
+                radial-gradient(circle at 10% 20%, rgba(91, 194, 246, 0.1) 0%, rgba(255, 255, 255, 0) 90%),
+                radial-gradient(circle at 90% 80%, rgba(46, 204, 113, 0.1) 0%, rgba(255, 255, 255, 0) 90%);
+        }
+
+        .container {
+            background-color: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            width: 90%;
+            max-width: 600px;
+            transition: all 0.3s ease;
+        }
+
+        .container:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+        }
+
+        .header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            position: relative;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 20px;
+            font-weight: 400;
+        }
+
+        .timer {
+            position: absolute;
+            top: 55%;
+            right: 5px;
+            transform: translateY(-50%);
+            background-color: rgba(255, 255, 255, 0.2);
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .captcha-wrapper {
+            background-color: #f0f0f0;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        .captcha-image {
+            width: 100%;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+
+        .audio-player {
+            width: 100%;
+            margin-bottom: 15px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+
+        input[type="text"]:focus {
+            border-color: var(--primary-color);
+            outline: none;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background-color: var(--secondary-color);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #27ae60;
+        }
+
+        .message {
+            text-align: center;
+            font-weight: 600;
+            margin-top: 15px;
+        }
+
+        .success {
+            color: var(--secondary-color);
+        }
+
+        .error {
+            color: var(--error-color);
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                width: 95%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Secure Verification</h1>
+            <div id="timer" class="timer">Time left: 10s</div>
+        </div>
+        <div class="content">
+            {% if captcha_image %}
+                <div class="captcha-wrapper">
+                    <img src="{{ captcha_image }}" alt="CAPTCHA" class="captcha-image">
+                    <audio controls class="audio-player">
+                        <source src="{{ audio_file }}" type="audio/mpeg">
+                        Your browser does not support the audio element.
+                    </audio>
+                </div>
+                <form method="POST" id="captcha-form">
+                    <div class="input-group">
+                        <input type="text" name="captcha" placeholder="Enter the code you see or hear" required>
+                    </div>
+                    <button type="submit">Verify</button>
+                </form>
+            {% endif %}
+            {% if message %}
+                <p class="message {% if 'CORRECTLY' in message %}success{% else %}error{% endif %}">
+                    {{ message }}
+                </p>
+            {% endif %}
+        </div>
+    </div>
+
+    <script>
+        // Timer functionality
+        const timerDisplay = document.getElementById('timer');
+        const form = document.getElementById('captcha-form');
+        let timeLeft = 10; // 10 seconds
+
+        function updateTimer() {
+            timerDisplay.textContent = `Time left: ${timeLeft}s`;
+            if (timeLeft === 0) {
+                clearInterval(timerInterval);
+                form.submit(); // Automatically submit the form when time is up
+            }
+            timeLeft--;
+        }
+
+        const timerInterval = setInterval(updateTimer, 1000);
+
+        // Ensure the timer stops if the form is submitted manually
+        form.addEventListener('submit', () => {
+            clearInterval(timerInterval);
+        });
+    </script>
+</body>
+</html>
